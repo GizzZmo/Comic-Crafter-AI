@@ -101,7 +101,7 @@ const StoryboardStep: React.FC<StoryboardStepProps> = ({ apiKey, initialStoryboa
   const generatePreview = useCallback(async (id: string, prompt: string) => {
     if (!prompt.trim()) return;
     setLoadingPreviews(prev => ({ ...prev, [id]: true }));
-    const base64Image = await generateImage(apiKey, `A low-resolution, quick sketch of: ${prompt}`);
+    const base64Image = await generateImage(apiKey, `A detailed comic book panel preview sketch in black and white line art with basic shading, depicting: ${prompt}`);
     if (base64Image) {
       setPreviews(prev => ({ ...prev, [id]: base64Image }));
     } else {
@@ -157,6 +157,13 @@ const StoryboardStep: React.FC<StoryboardStepProps> = ({ apiKey, initialStoryboa
         <p className="text-center text-gray-400 mb-6">Tweak the prompts and regenerate previews to perfect your vision.</p>
         
         <h3 className="text-xl font-bold text-center text-white mb-4">{storyboard.title}</h3>
+        
+        {storyboard.characterDescriptions && (
+            <div className="my-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                <h4 className="text-base font-semibold text-indigo-300 mb-2">Character Consistency Guide (For Your Reference)</h4>
+                <p className="text-gray-300 text-sm whitespace-pre-wrap">{storyboard.characterDescriptions}</p>
+            </div>
+        )}
 
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

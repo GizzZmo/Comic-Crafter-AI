@@ -32,7 +32,14 @@ Suggest a compelling ${ideaType} for the story. Be creative and concise, providi
   }
 };
 
-export const generateStoryboard = async (apiKey: string, storyIdea: string, artStyle: string): Promise<Storyboard | null> => {
+export const generateStoryboard = async (apiKey: string, storyIdea: string, artStyle: string, characterDescriptions: string): Promise<Storyboard | null> => {
+  const characterGuidance = characterDescriptions.trim()
+    ? `\n\n**Character Consistency Guide:** Use the following descriptions to ensure characters look consistent across all panels. Prepend relevant character details to each visual prompt where the characters appear.
+---
+${characterDescriptions}
+---`
+    : "";
+    
   const prompt = `You are a master comic book writer. Your task is to create a full storyboard for a 6-panel comic strip based on the user's story.
 You must also generate a title, a prompt for the front cover art, and a prompt for the back cover art.
 
@@ -43,6 +50,7 @@ You must also generate a title, a prompt for the front cover art, and a prompt f
     - A **description** containing the narration or dialogue text that will appear on the panel. This can be an empty string if there is no text.
 - The **Back Cover** prompt should be a fun, cool, or intriguing closing image.
 - For all visual prompts (covers and panels), ensure they describe a scene in a "${artStyle}".
+${characterGuidance}
 
 The user's story is:
 "${storyIdea}"`;
@@ -79,7 +87,7 @@ The user's story is:
     });
     
     const jsonText = response.text.trim();
-    const parsedStoryboard: Storyboard = JSON.parse(jsonText);
+    const parsedStoryboard: Omit<Storyboard, 'characterDescriptions'> = JSON.parse(jsonText);
 
     if(parsedStoryboard.panels.length !== 6) {
         console.warn("AI did not return exactly 6 panels. Adjusting...");
@@ -88,7 +96,7 @@ The user's story is:
         if(parsedStoryboard.panels.length > 6) parsedStoryboard.panels = parsedStoryboard.panels.slice(0, 6);
     }
 
-    return parsedStoryboard;
+    return { ...parsedStoryboard, characterDescriptions: characterDescriptions.trim() };
 
   } catch (error) {
     console.error("Error generating storyboard:", error);

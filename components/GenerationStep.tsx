@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -80,7 +81,7 @@ const GenerationStep: React.FC<GenerationStepProps> = ({ storyboard, apiKey, onR
         return;
       }
 
-      const comicElement = document.getElementById('comic-for-download');
+      const comicElement = document.getElementById('comic-for-pdf-download');
       if (!comicElement) {
           console.error("Comic container not found for download.");
           alert("Could not find comic content to download. Please try again.");
@@ -120,11 +121,11 @@ const GenerationStep: React.FC<GenerationStepProps> = ({ storyboard, apiKey, onR
 
   const handleDownloadImage = async () => {
     const qualityLabel = pdfScale > 2 ? 'ultra high resolution' : 'high resolution';
-    if (!window.confirm(`This will generate a ${qualityLabel} PNG image of your comic. Continue?`)) {
+    if (!window.confirm(`This will generate a ${qualityLabel} PNG image of your comic strip. Continue?`)) {
         return;
     }
     
-    const comicElement = document.getElementById('comic-for-download');
+    const comicElement = document.getElementById('comic-for-image-download');
     if (!comicElement) {
         console.error("Comic container not found for download.");
         alert("Could not find comic content to download. Please try again.");
@@ -143,7 +144,7 @@ const GenerationStep: React.FC<GenerationStepProps> = ({ storyboard, apiKey, onR
         
         const link = document.createElement('a');
         const safeTitle = storyboard.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'my-comic';
-        link.download = `comic-crafter-${safeTitle}.png`;
+        link.download = `comic-crafter-${safeTitle}-strip.png`;
         link.href = imageURL;
         document.body.appendChild(link);
         link.click();
@@ -172,7 +173,12 @@ const GenerationStep: React.FC<GenerationStepProps> = ({ storyboard, apiKey, onR
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-8">
-      {allImagesDone && <PrintableComic storyboard={storyboard} images={generatedImages} />}
+      {allImagesDone && (
+        <>
+            <PrintableComic id="comic-for-pdf-download" storyboard={storyboard} images={generatedImages} layout="page" />
+            <PrintableComic id="comic-for-image-download" storyboard={storyboard} images={generatedImages} layout="strip" />
+        </>
+      )}
 
       <div className="bg-gray-800/50 rounded-2xl shadow-2xl p-6 md:p-8 border border-gray-700 backdrop-blur-lg">
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-cyan-300">3. Your Comic Book!</h2>
@@ -220,57 +226,61 @@ const GenerationStep: React.FC<GenerationStepProps> = ({ storyboard, apiKey, onR
             </div>
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-8 flex flex-col items-center justify-center gap-4">
           <ActionButton onClick={onReset} variant="secondary" disabled={isGenerationInProgress || isSavingFile} title="Start over from the beginning to create a new comic.">
             Create Another Comic
           </ActionButton>
-          {allImagesDone && (
-              <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 p-3 bg-gray-900/50 border border-gray-700 rounded-lg">
-                <div className="flex items-center gap-2" role="radiogroup" aria-labelledby="download-quality-label">
-                    <span id="download-quality-label" className="text-sm font-medium text-gray-300 mr-2 whitespace-nowrap">Download Quality:</span>
-                    <button 
-                        role="radio"
-                        onClick={() => setPdfScale(2)} 
-                        className={`px-3 py-1 text-sm rounded-md transition-colors ${pdfScale === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-                        aria-checked={pdfScale === 2}
-                        title="Generate a high-quality file. Good balance between file size and image clarity."
-                    >
-                        High
-                    </button>
-                    <button 
-                        role="radio"
-                        onClick={() => setPdfScale(4)}
-                        className={`px-3 py-1 text-sm rounded-md transition-colors ${pdfScale === 4 ? 'bg-indigo-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-                        aria-checked={pdfScale === 4}
-                        title="Generate an ultra-high-quality file. Larger file size but maximum image detail."
-                    >
-                        Ultra
-                    </button>
-                </div>
-                <div className="flex items-center gap-4">
-                  <ActionButton
-                      onClick={handleDownloadComic}
-                      Icon={DownloadIcon}
-                      disabled={isGenerationInProgress || isSavingFile}
-                      isLoading={isSaving}
-                      loadingText="Creating PDF..."
-                      title="Compile all images into a single, high-quality comic book PDF file."
-                  >
-                      Download PDF
-                  </ActionButton>
-                  <ActionButton
-                      onClick={handleDownloadImage}
-                      Icon={DownloadIcon}
-                      disabled={isGenerationInProgress || isSavingFile}
-                      isLoading={isSavingImage}
-                      loadingText="Creating Image..."
-                      title="Compile all images into a single, high-quality comic strip PNG file."
-                  >
-                      Download Image
-                  </ActionButton>
-                </div>
+          
+          <div className="w-full max-w-3xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 p-3 bg-gray-900/50 border border-gray-700 rounded-lg">
+            {!allImagesDone && (
+              <p className="text-sm text-yellow-400">Download controls will unlock when all images are generated.</p>
+            )}
+            <div className="flex items-center gap-2" role="radiogroup" aria-labelledby="download-quality-label">
+                <span id="download-quality-label" className="text-sm font-medium text-gray-300 mr-2 whitespace-nowrap">Download Quality:</span>
+                <button 
+                    role="radio"
+                    onClick={() => setPdfScale(2)} 
+                    disabled={!allImagesDone || isSavingFile}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${pdfScale === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    aria-checked={pdfScale === 2}
+                    title="Generate a high-quality file. Good balance between file size and image clarity."
+                >
+                    High
+                </button>
+                <button 
+                    role="radio"
+                    onClick={() => setPdfScale(4)}
+                    disabled={!allImagesDone || isSavingFile}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${pdfScale === 4 ? 'bg-indigo-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    aria-checked={pdfScale === 4}
+                    title="Generate an ultra-high-quality file. Larger file size but maximum image detail."
+                >
+                    Ultra
+                </button>
             </div>
-          )}
+            <div className="flex items-center gap-4">
+              <ActionButton
+                  onClick={handleDownloadComic}
+                  Icon={DownloadIcon}
+                  disabled={!allImagesDone || isSavingFile}
+                  isLoading={isSaving}
+                  loadingText="Creating PDF..."
+                  title="Compile all images into a single, high-quality comic book PDF file."
+              >
+                  Download PDF
+              </ActionButton>
+              <ActionButton
+                  onClick={handleDownloadImage}
+                  Icon={DownloadIcon}
+                  disabled={!allImagesDone || isSavingFile}
+                  isLoading={isSavingImage}
+                  loadingText="Creating Image..."
+                  title="Compile all images into a single, high-quality comic strip PNG file."
+              >
+                  Download Image
+              </ActionButton>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -361,9 +371,11 @@ const ImagePanel: React.FC<ImagePanelProps> = ({ image, label, isLoading, isRege
 interface PrintableComicProps {
   storyboard: Storyboard;
   images: GeneratedImage[];
+  layout?: 'page' | 'strip';
+  id: string;
 }
 
-const PrintableComic: React.FC<PrintableComicProps> = ({ storyboard, images }) => {
+const PrintableComic: React.FC<PrintableComicProps> = ({ storyboard, images, layout = 'page', id }) => {
   const findImageSrc = (id: string) => {
     const img = images.find(i => i.id === id);
     return img?.base64 ? `data:image/jpeg;base64,${img.base64}` : undefined;
@@ -373,14 +385,26 @@ const PrintableComic: React.FC<PrintableComicProps> = ({ storyboard, images }) =
   const backCoverSrc = findImageSrc('back-cover');
   const panelSrcs = storyboard.panels.map((_, i) => findImageSrc(`panel-${i + 1}`));
 
+  const isPageLayout = layout === 'page';
+
+  const panelContainerStyle: React.CSSProperties = {
+    display: 'grid',
+    gap: '20px',
+    marginBottom: '40px',
+    gridTemplateColumns: isPageLayout ? 'repeat(2, 1fr)' : '1fr',
+  };
+
   return (
     <div
-      id="comic-for-download"
+      id={id}
       style={{
         position: 'absolute',
-        left: '-9999px',
-        top: 'auto',
-        width: '800px',
+        top: '0',
+        left: '0',
+        zIndex: -1,
+        opacity: 0,
+        pointerEvents: 'none',
+        width: isPageLayout ? '800px' : '600px',
         padding: '40px',
         backgroundColor: 'white',
         color: 'black',
@@ -400,7 +424,7 @@ const PrintableComic: React.FC<PrintableComicProps> = ({ storyboard, images }) =
 
       <div>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '15px', borderBottom: '2px solid #ccc', paddingBottom: '5px' }}>Comic Panels</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '40px' }}>
+        <div style={panelContainerStyle}>
           {panelSrcs.map((src, index) => (
             <div key={index}>
                 <p style={{textAlign: 'center', fontWeight: 'bold', marginBottom: '5px'}}>Panel {index + 1}</p>

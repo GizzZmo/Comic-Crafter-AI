@@ -21,6 +21,7 @@ const artStyles: { [key: string]: string } = {
 
 const IdeationStep: React.FC<IdeationStepProps> = ({ apiKey, onStoryboardGenerated }) => {
   const [storyIdea, setStoryIdea] = useState("A detective cat who solves mysteries in a city of robots.");
+  const [characterDescriptions, setCharacterDescriptions] = useState("Detective Mittens: A sleek black cat wearing a tiny trench coat and fedora. Officer Bot: A friendly, chrome-plated police robot with a single blue optic sensor.");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [selectedStyleKey, setSelectedStyleKey] = useState("Classic Comic");
@@ -46,7 +47,7 @@ const IdeationStep: React.FC<IdeationStepProps> = ({ apiKey, onStoryboardGenerat
     }
 
     setIsGenerating(true);
-    const storyboard = await generateStoryboard(apiKey, storyIdea, finalArtStyle);
+    const storyboard = await generateStoryboard(apiKey, storyIdea, finalArtStyle, characterDescriptions);
     if (storyboard) {
       onStoryboardGenerated(storyboard);
     } else {
@@ -98,15 +99,33 @@ const IdeationStep: React.FC<IdeationStepProps> = ({ apiKey, onStoryboardGenerat
                 )}
             </div>
 
+            <div className="mb-6">
+              <label htmlFor="story-idea" className="block text-lg font-semibold text-indigo-300 mb-2">Story Idea</label>
+              <textarea
+                id="story-idea"
+                className="w-full h-40 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+                placeholder="e.g., A knight who is afraid of the dark..."
+                value={storyIdea}
+                onChange={(e) => setStoryIdea(e.target.value)}
+                disabled={isBusy}
+                title="Enter the main plot or concept for your comic story here."
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="character-desc" className="block text-lg font-semibold text-indigo-300 mb-2">Character Descriptions (Optional)</label>
+              <p className="text-sm text-gray-400 mb-3">To improve character consistency, describe your main characters here. The AI will use this as a guide for all images.</p>
+              <textarea
+                  id="character-desc"
+                  className="w-full h-24 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+                  placeholder="e.g., Captain Starfire: A woman with fiery red hair in a sleek silver spacesuit. Zorp: A small, green, three-eyed alien sidekick."
+                  value={characterDescriptions}
+                  onChange={(e) => setCharacterDescriptions(e.target.value)}
+                  disabled={isBusy}
+                  title="Describe your characters' appearance to help the AI keep them consistent across panels."
+              />
+            </div>
 
-            <textarea
-              className="w-full h-48 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
-              placeholder="e.g., A knight who is afraid of the dark..."
-              value={storyIdea}
-              onChange={(e) => setStoryIdea(e.target.value)}
-              disabled={isBusy}
-              title="Enter the main plot or concept for your comic story here."
-            />
 
             <div className="my-6">
               <p className="text-center text-gray-400 mb-4 font-semibold">AI Idea Generators</p>

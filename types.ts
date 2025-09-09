@@ -15,6 +15,7 @@ export interface Storyboard {
   frontCoverPrompt: string;
   panels: Panel[];
   backCoverPrompt: string;
+  characterDescriptions?: string;
 }
 
 export interface GeneratedImage {
